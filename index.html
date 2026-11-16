@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kata Ganti Nama – เกมผจญภัย</title>
+<style>
+:root{--bg1:#ffe2ef;--bg2:#e4e0ff;--panel:#fff;--tx:#403653;--mut:#766b82;--pri:#8068a6;--card:#f7f3ff;--bd:#ddd2f1;--ok:#2e9e6b;--no:#d94f6b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#2a1f35;--bg2:#1e2040;--panel:#2b2540;--tx:#f0eaff;--mut:#b6abc9;--pri:#a68ad6;--card:#362e52;--bd:#4b4270;--ok:#55d19a;--no:#ff7b95}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Tahoma,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--tx);min-height:100vh}
+.wrap{max-width:560px;margin:0 auto;padding:14px}
+.panel{background:var(--panel);border-radius:24px;padding:20px;box-shadow:0 8px 25px #0002}
+h1{text-align:center;color:var(--pri);margin:0 0 4px;font-size:24px}
+.sub{text-align:center;color:var(--mut);font-size:14px;margin-bottom:14px}
+.hud{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:8px}
+.bar{height:10px;background:var(--card);border-radius:9px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;width:100%;background:var(--pri);transition:width .1s linear}
+.card{background:var(--card);border-radius:18px;padding:22px 14px;text-align:center;margin:10px 0}
+.q{font-size:22px;font-weight:700;line-height:1.5}
+.th{color:var(--mut);margin-top:8px;font-size:15px}
+.blank{display:inline-block;min-width:80px;border-bottom:3px solid var(--pri);color:var(--pri)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+button{border:0;border-radius:14px;padding:14px;font-size:17px;font-weight:bold;cursor:pointer;font-family:inherit;background:var(--pri);color:#fff}
+.choices button{background:var(--panel);color:var(--tx);border:2px solid var(--bd)}
+.choices button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.choices button.no{background:var(--no);color:#fff;border-color:var(--no)}
+.fb{min-height:48px;text-align:center;font-weight:bold;font-size:15px}
+.big{font-size:56px;text-align:center}
+.center{text-align:center}
+.shake{animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pop{animation:pp .35s}
+@keyframes pp{50%{transform:scale(1.06)}}
+.start{display:block;margin:16px auto 0;padding:14px 28px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="panel">
+<h1>🌷 KATA GANTI NAMA 🌷</h1>
+<div class="sub">เกมเติมคำสรรพนาม | ภาษามลายู ม.3</div>
+<div id="app"></div>
+</div></div>
+<script>
+const Q=[
+["___ ialah pelajar.","ฉันเป็นนักเรียน","Saya",["Saya","Kamu","Dia","Mereka"],"Saya = บุรุษที่ 1 (ผู้พูด)"],
+["Adakah ___ sudah makan?","คุณกินข้าวหรือยัง","Kamu",["Saya","Kamu","Dia","Kami"],"Kamu = บุรุษที่ 2 (ผู้ฟัง)"],
+["Guru besar sangat baik. ___ mengajar kami dengan sabar.","ท่านสอนเราอย่างอดทน","Beliau",["Beliau","Aku","Kita","Kalian"],"Beliau = บุรุษที่ 3 กล่าวถึงอย่างให้เกียรติ"],
+["Ahmad dan Ali bermain bola. ___ sangat gembira.","พวกเขามีความสุขมาก","Mereka",["Kami","Mereka","Anda","Aku"],"Mereka = พวกเขา (บุรุษที่ 3)"],
+["___ akan pulang dahulu, tetapi kamu boleh tinggal.","พวกเรา (ไม่รวมผู้ฟัง) จะกลับก่อน","Kami",["Kita","Kami","Dia","Anda"],"Kami = พวกเรา ไม่รวมผู้ฟัง"],
+["Mari ___ pergi bersama-sama, awak pun ikut!","เรามาไปด้วยกัน รวมคุณด้วย","Kita",["Kami","Mereka","Kita","Beliau"],"Kita = พวกเรา รวมผู้ฟัง"],
+["Raja bersabda. ___ berangkat ke istana.","พระองค์เสด็จไปพระราชวัง","Baginda",["Baginda","Saya","Kalian","Aku"],"Baginda = พระองค์ (ราชวงศ์)"],
+["Kamu semua, ___ perlu senyap!","พวกคุณต้องเงียบ","Kalian",["Kalian","Mereka","Kami","Dia"],"Kalian = พวกคุณ (บุรุษที่ 2 พหูพจน์)"],
+["Encik, boleh ___ beritahu alamat ini?","คุณ (สุภาพ) ช่วยบอกที่อยู่นี้ได้ไหม","Anda",["Aku","Anda","Dia","Mereka"],"Anda = คุณ (สุภาพ)"],
+["___ suka membaca buku.","ฉันชอบอ่านหนังสือ (ไม่เป็นทางการ)","Aku",["Aku","Anda","Beliau","Kalian"],"Aku = ฉัน (ไม่เป็นทางการ)"]
+];
+const T=12,app=document.getElementById('app');
+let qs,i,score,lives,streak,best=0,tm,left,locked;
+const sh=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){let j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]]}return a};
+function home(txt){
+ app.innerHTML=`<div class="center"><div class="big">🎮</div><p>${txt||'เลือกคำสรรพนามให้ถูกต้องก่อนหมดเวลา!<br>มี ❤️ 3 ดวง ตอบถูกต่อเนื่องได้โบนัส 🔥'}</p><p class="sub">สถิติสูงสุด: ${best} คะแนน</p></div><button class="start" id="go">เริ่มเกม</button>`;
+ document.getElementById('go').onclick=start;
+}
+function start(){qs=sh(Q);i=0;score=0;lives=3;streak=0;next()}
+function next(){
+ if(i>=qs.length||lives<=0)return end();
+ const q=qs[i];locked=false;left=T;
+ const parts=q[0].split('___');
+ app.innerHTML=`<div class="hud"><span>ข้อ ${i+1}/${qs.length}</span><span id="st">🔥 ${streak}</span><span>⭐ ${score}</span><span>${'❤️'.repeat(lives)}</span></div>
+ <div class="bar"><i id="tb"></i></div>
+ <div class="card" id="cd"><div class="q">${parts[0]}<span class="blank" id="bl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>${parts[1]||''}</div><div class="th">${q[1]}</div></div>
+ <div class="choices" id="ch"></div><div class="fb" id="fb"></div>`;
+ const ch=document.getElementById('ch');
+ sh(q[3]).forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>pick(b,o);ch.appendChild(b)});
+ clearInterval(tm);
+ tm=setInterval(()=>{left-=.1;document.getElementById('tb').style.width=(left/T*100)+'%';if(left<=0){clearInterval(tm);pick(null,null)}},100);
+}
+function pick(btn,o){
+ if(locked)return;locked=true;clearInterval(tm);
+ const q=qs[i],ok=o===q[2],fb=document.getElementById('fb'),cd=document.getElementById('cd');
+ document.getElementById('bl').textContent=q[2];
+ document.querySelectorAll('#ch button').forEach(b=>{if(b.textContent===q[2])b.classList.add('ok')});
+ if(ok){streak++;const bonus=Math.round(left)+(streak>=3?5:0);score+=10+bonus;cd.classList.add('pop');
+  fb.innerHTML=`🎉 ถูกต้อง! +${10+bonus}<br><small>${q[4]}</small>`}
+ else{streak=0;lives--;if(btn)btn.classList.add('no');cd.classList.add('shake');
+  fb.innerHTML=`${o===null?'⏰ หมดเวลา!':'💗 ยังไม่ถูก'} คำตอบคือ ${q[2]}<br><small>${q[4]}</small>`}
+ i++;setTimeout(next,ok?1500:2400);
+}
+function end(){
+ clearInterval(tm);
+ const win=lives>0;if(score>best)best=score;
+ home(`<span style="font-size:22px;font-weight:800">${win?'🏆 ผ่านครบทุกข้อ!':'💔 หมดหัวใจแล้ว'}</span><br>คะแนนรอบนี้ ${score}`);
+}
+home();
+</script>
+</body>
+</html>
